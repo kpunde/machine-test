@@ -27,18 +27,37 @@ func main() {
 
 	dataChannel := make(chan entity.PortEntity)
 	errorChannel := make(chan error)
-	go ops.GetPortEntityFromFile("resources/ports.json", dataChannel, errorChannel)
+	go ops.GetPortEntityFromFile("resources/ports1.json", dataChannel, errorChannel)
 
-	for msg := range dataChannel {
-		dataBase[msg.Name] = msg.PortObj
+	isError := false
+
+	for {
+		select {
+		case msg, ok := <-dataChannel:
+			if !ok {
+				dataChannel = nil
+			}
+			dataBase[msg.Name] = msg.PortObj
+		case err, ok := <-errorChannel:
+			if !ok {
+				errorChannel = nil
+			} else {
+				log.Println(err)
+				isError = true
+			}
+		}
+
+		if dataChannel == nil && errorChannel == nil {
+			break
+		}
 	}
 
-	for err := range errorChannel {
-		log.Println(err)
-	}
+	if !isError {
+		for k, v := range dataBase {
+			log.Printf("Port: %v, Details: %v\n", k, v)
 
-	for k, v := range dataBase {
-		log.Printf("Port: %v, Details: %v\n", k, v)
-		time.Sleep(time.Second)
+			//Time sleep included to test the cancel signal
+			time.Sleep(time.Second)
+		}
 	}
 }

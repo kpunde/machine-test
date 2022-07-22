@@ -25,5 +25,5 @@ Note
 ---------------------
 Application is created in 1 hour 
 Needs further work on: 
-   - Troubleshoot error handling on go routine. Currently data go routine is getting dead locked during error. 
    - MongoDB could be used for data insertion in database
+   - Better package distribution
