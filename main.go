@@ -2,19 +2,18 @@ package main
 
 import (
 	"log"
-	"machine_test/entity"
-	"machine_test/ops"
+	"machine_test/handler"
+	logg "machine_test/utlities/logger"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 )
 
 func cleanup() {
 	log.Printf("Shutting down ...")
 }
 
-func main() {
+func handleInterrupt() {
 	c := make(chan os.Signal)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
@@ -22,42 +21,22 @@ func main() {
 		cleanup()
 		os.Exit(1)
 	}()
+}
 
-	dataBase := make(map[string]entity.Port)
+func main() {
+	handleInterrupt()
 
-	dataChannel := make(chan entity.PortEntity)
-	errorChannel := make(chan error)
-	go ops.GetPortEntityFromFile("resources/ports1.json", dataChannel, errorChannel)
-
-	isError := false
-
-	for {
-		select {
-		case msg, ok := <-dataChannel:
-			if !ok {
-				dataChannel = nil
-			}
-			dataBase[msg.Name] = msg.PortObj
-		case err, ok := <-errorChannel:
-			if !ok {
-				errorChannel = nil
-			} else {
-				log.Println(err)
-				isError = true
-			}
+	logger := logg.InitService("/resources/app.log", 4)
+	defer func(logger logg.LoggerService) {
+		err := logger.StopLog()
+		if err != nil {
+			log.Println(err)
 		}
+	}(logger)
 
-		if dataChannel == nil && errorChannel == nil {
-			break
-		}
-	}
+	logger.Info("Application Started !")
 
-	if !isError {
-		for k, v := range dataBase {
-			log.Printf("Port: %v, Details: %v\n", k, v)
-
-			//Time sleep included to test the cancel signal
-			time.Sleep(time.Second)
-		}
-	}
+	pHandler := handler.NewPortHandler("/resources/")
+	pHandler.HandleFSFiles()
+	pHandler.OutputAllEntries()
 }

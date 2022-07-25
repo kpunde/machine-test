@@ -11,7 +11,7 @@ type LoggerService interface {
 	Debug(msg string) error
 	Info(msg string) error
 	Warning(msg string) error
-	Error(msg string) error
+	Error(msg error) error
 	StopLog() error
 }
 
@@ -62,7 +62,7 @@ func (l logger) Warning(msg string) error {
 	return nil
 }
 
-func (l logger) Error(msg string) error {
+func (l logger) Error(msg error) error {
 	if l.logger == nil {
 		return fmt.Errorf("logger not initiated correctly")
 	}

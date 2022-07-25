@@ -5,8 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"machine_test/entity"
 	"os"
+	"path/filepath"
+	"strings"
 )
 
 type fsHandler struct{}
@@ -21,7 +24,8 @@ func (f fsHandler) GetAllFilesFromDir(path string) ([]string, error) {
 	for _, item := range fi {
 		if !item.IsDir() {
 			if item.Name()[len(item.Name())-5:] == ".json" {
-				fileNames = append(fileNames, item.Name())
+				p, _ := filepath.Abs(filepath.Join(path, item.Name()))
+				fileNames = append(fileNames, p)
 			}
 		}
 	}
@@ -30,6 +34,8 @@ func (f fsHandler) GetAllFilesFromDir(path string) ([]string, error) {
 }
 
 func (f fsHandler) GetPortEntityFromFile(path string, data chan entity.PortEntity, errChannel chan error) {
+	log.Println("GetPortEntityFromFile called path: " + path)
+
 	defer close(data)
 	defer close(errChannel)
 
@@ -58,7 +64,10 @@ func (f fsHandler) GetPortEntityFromFile(path string, data chan entity.PortEntit
 		if err != nil {
 			errChannel <- err
 		}
-		key := t.(string)
+		key := strings.TrimSpace(t.(string))
+		if len(key) == 0 {
+			continue
+		}
 
 		var value entity.Port
 		if err = dec.Decode(&value); err != nil {

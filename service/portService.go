@@ -6,7 +6,11 @@ import (
 )
 
 type postService struct {
-	dao PostsDao
+	dao dao.PostsDao
+}
+
+func (p postService) GetAll() map[string]entity.Port {
+	return p.dao.GetAll()
 }
 
 func (p postService) InsertPost(port entity.PortEntity) error {
@@ -25,14 +29,15 @@ func (p postService) UpdatePost(port entity.PortEntity) error {
 	return p.dao.UpdatePost(port)
 }
 
-type PostsDao interface {
+type PostsService interface {
 	InsertPost(port entity.PortEntity) error
 	GetPost(portName string) (*entity.Port, error)
 	DeletePost(portName string) error
 	UpdatePost(port entity.PortEntity) error
+	GetAll() map[string]entity.Port
 }
 
-func NewPostsDao() PostsDao {
+func NewPostsService() PostsService {
 	return &postService{
 		dao: dao.NewPostsDao(),
 	}

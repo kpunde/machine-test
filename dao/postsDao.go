@@ -3,6 +3,7 @@ package dao
 import (
 	"fmt"
 	"machine_test/entity"
+	"strings"
 )
 
 var dataBase = make(map[string]entity.Port)
@@ -11,8 +12,16 @@ type postDao struct {
 	db map[string]entity.Port
 }
 
+func (p postDao) GetAll() map[string]entity.Port {
+	return p.db
+}
+
 func (p postDao) InsertPost(port entity.PortEntity) error {
 	portName := port.Name
+	portName = strings.TrimSpace(portName)
+	if len(portName) == 0 {
+		return nil
+	}
 	if _, ok := p.db[portName]; ok {
 		return p.UpdatePost(port)
 	}
@@ -49,6 +58,7 @@ type PostsDao interface {
 	GetPost(portName string) (*entity.Port, error)
 	DeletePost(portName string) error
 	UpdatePost(port entity.PortEntity) error
+	GetAll() map[string]entity.Port
 }
 
 func NewPostsDao() PostsDao {
